@@ -15,6 +15,8 @@
 
 		private $query;
 
+		private $variaveis;
+
 		private $campos;
 
 		private $render = array(
@@ -22,7 +24,7 @@
 				'input[checkbox]'	=> "<input type=\"checkbox\" value=\"{valor}\" >{valor}</input>",
 				'input[radio]'		=> "<input type=\"radio\" value=\"{valor}\" >{valor}</input>",
 				'select'			=> "<select name=\"\" id=\"\">{valor}</select>",
-				'textarea'			=> "<textarea name=\"\" id=\"\" cols=\"30\" rows=\"10\"></textarea>"
+				'textarea'			=> "<textarea name=\"\" id=\"\" cols=\"30\" rows=\"10\">{valor}</textarea>"
 			);
 
 		function __construct( ){ }
@@ -66,9 +68,12 @@
 							$query[ $cont ] .= $dados[ $v ] ;
 						}
 
-						if( $this->isFecha( $dados[ $v ] ) )
+						if( $this->isFecha( $dados[ $v ] ) ) {
 							$cont++;
+							$var = explode("=", $dados[ $v +1] );
+							$this->variaveis[][ @trim($var[0]) ] = @trim($var[1]);
 						}
+					}
 				return true;
 			});
 			$this->query = $query;
@@ -98,21 +103,25 @@
 
 			foreach ($this->campos as $i => $v) {
 
+				$titulo = "";
+				$valor = "";
+
 				if( $v['tipo'] == 'select' ) {
 					foreach (explode(";",$v['op']) as $k => $d) {
 						$g = explode("=", $d );
-						$v['op'] .=  "<option value='{$g[0]}' >{$g[1]}</option>";
+						$valor .=  "<option value='{$g[0]}' >{$g[1]}</option>";
 					}
 				}
+				else
+					$valor = $this->variaveis[ $i ][ array_keys( $this->variaveis[ $i ] )[0] ];
 
-				$titulo = "";
 
 				if( !empty( $v['titulo'] ) )
 					$titulo = $v['titulo'];
 
 				$form .= "<div class=\"row\">" . 
 							( $v['tipo'] != "input[checkbox]" ? ( $v['tipo'] != "input[radio]" ? "<label for=\"\">{$titulo}</label><br/>" : "" ) : "" ) .
-							str_replace("{valor}", $v['op'] ,$this->render[ $v['tipo'] ] ) . 
+							str_replace("{valor}", $valor ,$this->render[ $v['tipo'] ] ) . 
 						"</div>";
 			}
 
